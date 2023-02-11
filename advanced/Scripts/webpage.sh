@@ -12,6 +12,8 @@
 # This file is copyright under the latest version of the EUPL.
 # Please see LICENSE file for your rights under this license.
 
+# TODO - this entire file might be able to be removed in v6
+
 readonly dnsmasqconfig="/etc/dnsmasq.d/01-pihole.conf"
 readonly dhcpconfig="/etc/dnsmasq.d/02-pihole-dhcp.conf"
 readonly FTLconf="/etc/pihole/pihole-FTL.conf"
@@ -91,13 +93,7 @@ SetTemperatureUnit() {
     echo -e "  ${TICK} Set temperature unit to ${unit}"
 }
 
-HashPassword() {
-    # Compute password hash twice to avoid rainbow table vulnerability
-    return=$(echo -n "${1}" | sha256sum | sed 's/\s.*$//')
-    return=$(echo -n "${return}" | sha256sum | sed 's/\s.*$//')
-    echo "${return}"
-}
-
+# TODO: We can probably remove the reliance on this function too, just tell people to pihole-FTL --config webserver.api.password "password"
 SetWebPassword() {
     if [ "${SUDO_USER}" == "www-data" ]; then
         echo "Security measure: user www-data is not allowed to change webUI password!"
@@ -132,10 +128,8 @@ SetWebPassword() {
     fi
 
     if [ "${PASSWORD}" == "${CONFIRM}" ] ; then
-        # We do not wrap this in brackets, otherwise BASH will expand any appropriate syntax
-        hash=$(HashPassword "$PASSWORD")
-        # Save hash to file
-        setFTLConfigValue "webserver.api.pwhash" "${hash}" >/dev/null
+        # pihole-FTL will automatically hash the password
+        setFTLConfigValue "webserver.api.password" "${PASSWORD}" >/dev/null
         echo -e "  ${TICK} New password set"
     else
         echo -e "  ${CROSS} Passwords don't match. Your password has not been changed"
