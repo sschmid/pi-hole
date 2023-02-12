@@ -467,6 +467,9 @@ gravity_DownloadBlocklists() {
 
   str="Storing downloaded domains in new gravity database"
   echo -ne "  ${INFO} ${str}..."
+  # TODO: Playing with Alpine, the target file ends up with additional empty lines and I don't know why
+  #       This is a workaround for now to remove empty lines
+  sed -i '/^\s*$/d' "${target}"
   output=$( { printf ".timeout 30000\\n.mode csv\\n.import \"%s\" gravity\\n" "${target}" | pihole-FTL sqlite3 "${gravityTEMPfile}"; } 2>&1 )
   status="$?"
 
