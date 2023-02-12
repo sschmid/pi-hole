@@ -827,11 +827,11 @@ gravity_Cleanup() {
 
   echo -e "${OVER}  ${TICK} ${str}"
 
-  # Only restart DNS service if offline
-  if ! pgrep pihole-FTL &> /dev/null; then
-    "${PIHOLE_COMMAND}" restartdns
-    dnsWasOffline=true
-  fi
+  # # Only restart DNS service if offline
+  # if ! pgrep pihole-FTL &> /dev/null; then
+  #   "${PIHOLE_COMMAND}" restartdns
+  #   dnsWasOffline=true
+  # fi
 
   # Print Pi-hole status if an error occurred
   if [[ -n "${error}" ]]; then
@@ -998,4 +998,4 @@ gravity_ShowCount
 gravity_Cleanup
 echo ""
 
-"${PIHOLE_COMMAND}" status
+# "${PIHOLE_COMMAND}" status
