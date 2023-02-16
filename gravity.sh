@@ -524,14 +524,23 @@ num_total_imported_domains=0
 num_domains=0
 num_non_domains=0
 parseList() {
-  local adlistID="${1}" src="${2}" target="${3}" non_domains sample_non_domains
-  # This sed does the following things:
-  # 1. Remove all lines containing no domains
-  # 2. Remove all domains containing invalid characters. Valid are: a-z, A-Z, 0-9, dot (.), minus (-), underscore (_)
-  # 3. Append ,adlistID to every line
-  # 4. Remove trailing period (see https://github.com/pi-hole/pi-hole/issues/4701)
+  local adlistID="${1}" src="${2}" target="${3}" temp_file non_domains sample_non_domains
+
+  # Create a temporary file for the sed magic instead of using "${target}" directly
+  # this allows to split the sed commands to improve readability
+  temp_file="$(mktemp -p "/tmp" --suffix=".gravity")"
+
+  # 1. Add all valid domains
+  sed "/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}[a-zA-Z0-9._-](?:\.[a-zA-Z]{2,})+$/!d" "${src}" > "${temp_file}"
+  # 2. Add all supported ABP style lines (||subdomain.domain.tlp^)
+  sed "/^\|\|[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}[a-zA-Z0-9._-](?:\.[a-zA-Z]{2,})+\^$/!d" "${src}" >> "${temp_file}"
+  # 3. Remove trailing period (see https://github.com/pi-hole/pi-hole/issues/4701)
+  # 4. Append ,adlistID to every line
   # 5. Ensures there is a newline on the last line
-  sed -r  "/([^\.]+\.)+[^\.]{2,}/!d;/[^a-zA-Z0-9.\_-]/d;s/\.$//;s/$/,${adlistID}/;/.$/a\\" "${src}" >> "${target}"
+  sed -i "s/\.$//;s/$/,${adlistID}/;/.$/a\\" "${temp_file}"
+
+  # concanate the temporary file to the target file
+  cat "${temp_file}" >> "${target}"
 
   # Find lines containing no domains or with invalid characters (see above)
   # Remove duplicates from the list
