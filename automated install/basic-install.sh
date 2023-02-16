@@ -2612,8 +2612,8 @@ main() {
 
         # Get the privacy level if it exists (default is 0)
         if [[ -f "${FTL_CONFIG_FILE}" ]]; then
-            # remove all lines with comments and extract the first PRIVACYLEVEL found
-            PRIVACY_LEVEL=$(sed -e '/^[[:blank:]]*#/d' "${FTL_CONFIG_FILE}" | awk -F 'PRIVACYLEVEL=' 'NR==1{printf$2}')
+            # use getVal from utils.sh to get PRIVACYLEVEL
+            PRIVACY_LEVEL=$(getVal "${FTL_CONFIG_FILE}" "PRIVACYLEVEL")
 
             # If no setting was found, default to 0
             PRIVACY_LEVEL="${PRIVACY_LEVEL:-0}"
