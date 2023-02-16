@@ -67,6 +67,7 @@ def test_get_value_works(host):
     output = host.run(
         """
     source /opt/pihole/utils.sh
+    echo "Somekey=xxx" >> /tmp/testfile
     echo "#Testkey=1234" >> /tmp/testfile
     echo "Testkey=5678" >> /tmp/testfile
     echo "Testkey=abcd" >> /tmp/testfile

@@ -90,7 +90,7 @@ getVal() {
   local file="${1}"
   local key="${2}"
   local value
-  value=$(sed -e '/^[[:blank:]]*#/d' "${file}" | awk -F "${key}=" 'NR==1{printf$2}')
+  value=$(sed -e '/^[[:blank:]]*#/d' "${file}" | grep "${key}" | awk -F "=" 'NR==1{printf$2}')
   printf "%s" "$value"
 }
 
