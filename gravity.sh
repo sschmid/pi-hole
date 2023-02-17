@@ -530,10 +530,16 @@ parseList() {
   # this allows to split the sed commands to improve readability
   temp_file="$(mktemp -p "/tmp" --suffix=".gravity")"
 
-  # 1. Add all valid domains
-  sed "/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}[a-zA-Z0-9._-](?:\.[a-zA-Z]{2,})+$/!d" "${src}" > "${temp_file}"
+  # 1. Add all valid domains (adpoted from https://stackoverflow.com/a/30007882)
+  sed -r "/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/!d" "${src}" > "${temp_file}"
   # 2. Add all supported ABP style lines (||subdomain.domain.tlp^)
-  sed "/^\|\|[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}[a-zA-Z0-9._-](?:\.[a-zA-Z]{2,})+\^$/!d" "${src}" >> "${temp_file}"
+  sed -r "/^\|\|([a-z0-9]([a-z0-9-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]\^$/!d" "${src}" >> "${temp_file}"
+
+  # Find lines containing no domains or with invalid characters (not matching regex above)
+  # This is simply everything that is not in $temp_file compared to $src
+  # Remove duplicates from the list
+  mapfile -t non_domains < <(grep -Fvf "${temp_file}" "${src}" | sort -u )
+
   # 3. Remove trailing period (see https://github.com/pi-hole/pi-hole/issues/4701)
   # 4. Append ,adlistID to every line
   # 5. Ensures there is a newline on the last line
@@ -541,12 +547,6 @@ parseList() {
 
   # concanate the temporary file to the target file
   cat "${temp_file}" >> "${target}"
-
-  # Find lines containing no domains or with invalid characters (see above)
-  # Remove duplicates from the list
-  mapfile -t non_domains <<< "$(sed -r "/([^\.]+\.)+[^\.]{2,}/d" < "${src}")"
-  mapfile -t -O "${#non_domains[@]}" non_domains <<< "$(sed -r "/[^a-zA-Z0-9.\_-]/!d" < "${src}")"
-  IFS=" " read -r -a non_domains <<< "$(tr ' ' '\n' <<< "${non_domains[@]}" | sort -u | tr '\n' ' ')"
 
   # A list of items of common local hostnames not to report as unusable
   # Some lists (i.e StevenBlack's) contain these as they are supposed to be used as HOST files
