@@ -530,10 +530,11 @@ parseList() {
   # this allows to split the sed commands to improve readability
   temp_file="$(mktemp -p "/tmp" --suffix=".gravity")"
 
-  # 1. Add all valid domains (adpoted from https://stackoverflow.com/a/30007882)
-  sed -r "/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/!d" "${src}" > "${temp_file}"
+  # 1. Add all valid domains (adapted from https://stackoverflow.com/a/30007882)
+  # no need to include uppercase letters, as we convert to lowercase in gravity_ParseFileIntoDomains() already
+  sed -r "/^([a-z0-9]([a-z0-9_-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/!d" "${src}" > "${temp_file}"
   # 2. Add all supported ABP style lines (||subdomain.domain.tlp^)
-  sed -r "/^\|\|([a-z0-9]([a-z0-9-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]\^$/!d" "${src}" >> "${temp_file}"
+  sed -r "/^\|\|([a-z0-9]([a-z0-9_-]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]\^$/!d" "${src}" >> "${temp_file}"
 
   # Find lines containing no domains or with invalid characters (not matching regex above)
   # This is simply everything that is not in $temp_file compared to $src
@@ -545,7 +546,7 @@ parseList() {
   # 5. Ensures there is a newline on the last line
   sed -i "s/\.$//;s/$/,${adlistID}/;/.$/a\\" "${temp_file}"
 
-  # concanate the temporary file to the target file
+  # concatenate the temporary file to the target file
   cat "${temp_file}" >> "${target}"
 
   # A list of items of common local hostnames not to report as unusable
