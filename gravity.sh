@@ -519,10 +519,6 @@ gravity_DownloadBlocklists() {
   gravity_Blackbody=true
 }
 
-# num_total_imported_domains increases for each list processed
-num_total_imported_domains=0
-num_domains=0
-num_non_domains=0
 parseList() {
   local adlistID="${1}" src="${2}" target="${3}" temp_file non_domains sample_non_domains
 
@@ -563,13 +559,8 @@ parseList() {
   # Get a sample of non-domain entries, limited to 5 (the list should already have been de-duplicated)
   IFS=" " read -r -a sample_non_domains <<< "$(tr ' ' '\n' <<< "${non_domains[@]}" | head -n 5 | tr '\n' ' ')"
 
-  local tmp_new_imported_total
-  # Get the new number of domains in destination file
-  tmp_new_imported_total="$(grep -c "^" "${target}")"
-  # Number of imported lines for this file is the difference between the new total and the old total. (Or, the number of domains we just added.)
-  num_domains="$(( tmp_new_imported_total-num_total_imported_domains ))"
-  # Replace the running total with the new total.
-  num_total_imported_domains="$tmp_new_imported_total"
+  # Get the number of domains added
+  num_domains="$(grep -c "^" "${temp_file}")"
   # Get the number of non_domains (this is the number of entries left after stripping the source of comments/duplicates/false positives/domains)
   num_non_domains="${#non_domains[@]}"
 
